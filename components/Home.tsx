@@ -18,7 +18,7 @@ import {CityData, ForecastData, HomeProps} from '../types';
 import ForecastDailyPage from './ForecastDailyPage';
 import MainInfo from './MainInfo';
 
-const API_KEY = '4fdd01106b7a4672a4143403241904';
+const key = '4fdd01106b7a4672a4143403241904';
 
 const Home = ({location}: HomeProps) => {
   const isDarkMode = useColorScheme() === 'dark';
@@ -38,7 +38,7 @@ const Home = ({location}: HomeProps) => {
       if (txt.length > 2) {
         const {data} = await axios.get<
           CityData[]
-        >(`https://api.weatherapi.com/v1/search.json?key=${API_KEY}&q=${txt}
+        >(`https://api.weatherapi.com/v1/search.json?key=${key}&q=${txt}
   
   `);
         setCityData(data);
@@ -53,7 +53,7 @@ const Home = ({location}: HomeProps) => {
   const getForecastDaily = async (text: string): Promise<void> => {
     try {
       const {data} = await axios.get<ForecastData>(
-        `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${text}&days=6&aqi=no&alerts=no`,
+        `https://api.weatherapi.com/v1/forecast.json?key=${key}&q=${text}&days=3`,
       );
 
       setForecastDaily(data?.forecast?.forecastday);
@@ -80,7 +80,7 @@ const Home = ({location}: HomeProps) => {
   ): Promise<void> => {
     try {
       const {data} = await axios.get<ForecastData>(
-        `https://api.weatherapi.com/v1/forecast.json?key=${API_KEY}&q=${latitude},${longitude}&days=6&aqi=no&alerts=no`,
+        `https://api.weatherapi.com/v1/forecast.json?key=${key}&q=${latitude},${longitude}&days=3`,
       );
 
       setForecastDaily(data?.forecast?.forecastday);
@@ -97,7 +97,15 @@ const Home = ({location}: HomeProps) => {
       );
       setForecastHourley(todayHourley.concat(tomorrowHourley));
     } catch (error) {
-      console.error(error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error message: ', error.message);
+        if (error.response) {
+          console.error('Error data: ', error.response.data);
+          console.error('Error status: ', error.response.status);
+        }
+      } else {
+        console.error('Unexpected error: ', error);
+      }
     }
   };
 

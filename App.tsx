@@ -5,19 +5,19 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
-  Alert,
-  ImageBackground,
   StatusBar,
+  ImageBackground,
   StyleSheet,
-  useColorScheme,
+  Platform,
+  PermissionsAndroid,
 } from 'react-native';
-import {SafeAreaView, SafeAreaProvider} from 'react-native-safe-area-context';
-
+import {SafeAreaProvider, SafeAreaView} from 'react-native-safe-area-context';
+import {useColorScheme} from 'react-native';
 import {Colors} from 'react-native/Libraries/NewAppScreen';
+import Geolocation from 'react-native-geolocation-service';
 import Home from './components/Home';
-import Geolocation from '@react-native-community/geolocation';
 
 const image = {
   uri: 'https://plus.unsplash.com/premium_photo-1686600889814-1c9494b45e8b?q=80&w=2127&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
@@ -28,47 +28,33 @@ const imageDark = {
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
-  const [location, setLocation] = useState({});
+  const [location, setLocation] = useState({latitude: 0, longitude: 0}); // Allow null as the initial state
 
   const backgroundStyle = {
     backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
   };
 
-  const [cityContent] = useState([
-    'Chelak',
-    'Paris, France',
-    'Tokyo, Japan',
-    'Berlin, Germany',
-    'Sydney, Australia',
-  ]);
-  const getLocation = () => {
-    try {
-      Geolocation.getCurrentPosition(
-        position => {
-          const {latitude, longitude} = position.coords;
-          setLocation({latitude, longitude});
-        },
-        error => {
-          console.log('Error:', error);
-          if (error.code === 1) {
-            Alert.alert(
-              'Permission Denied',
-              'Location permission was not granted.',
-            );
-          } else if (error.code === 2) {
-            Alert.alert(
-              'Position Unavailable',
-              'Unable to determine your location.',
-            );
-          } else if (error.code === 3) {
-            Alert.alert('Timeout', 'Location request timed out.');
-          } else {
-            Alert.alert('Error', 'An unknown error occurred.');
-          }
-        },
-        {enableHighAccuracy: true, timeout: 20000, maximumAge: 1000},
+  const getLocation = async () => {
+    if (Platform.OS === 'android') {
+      const granted = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       );
-    } catch (error) {}
+      if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+        console.log('Location permission denied');
+        return;
+      }
+    }
+
+    Geolocation.getCurrentPosition(
+      position => {
+        const {latitude, longitude} = position.coords;
+        setLocation({latitude, longitude});
+      },
+      error => {
+        console.log(error.code, error.message);
+      },
+      {enableHighAccuracy: true, timeout: 15000, maximumAge: 10000},
+    );
   };
 
   useEffect(() => {

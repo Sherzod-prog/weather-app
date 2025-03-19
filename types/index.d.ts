@@ -4,7 +4,6 @@ export interface HomeProps {
     longitude: number;
   };
 }
-
 export interface ForecastData {
   current: {
     temp_c: number;
